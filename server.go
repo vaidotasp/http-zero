@@ -74,11 +74,25 @@ import (
 func handleConnection(conn net.Conn) {
 	fmt.Println("connection handling")
 	clientAddr := conn.RemoteAddr()
-	fmt.Printf("Client address: %s", clientAddr)
+	fmt.Printf("Client address: %s\n", clientAddr)
+
+	buffer := make([]byte, 1024)
+	_, err := conn.Read(buffer)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Printf("buffer: %s", buffer)
+
+	// example of response here
+	r := []byte("HTTP/1.1 200 OK\r\nConnection: close\r\nContent-Type: text/html\r\nContent-Length: 19\r\n\r\n<h1>Hola Mundo</h1>")
+	conn.Write(r)
+
 	defer conn.Close()
 }
 
 func main() {
+	fmt.Println("TCP server started")
 	// get TCP server going
 	l, err := net.Listen("tcp", "localhost:1337")
 	if err != nil {
@@ -87,6 +101,7 @@ func main() {
 
 	defer l.Close()
 
+	// this basically is while (true)
 	for {
 		conn, err := l.Accept()
 		if err != nil {
