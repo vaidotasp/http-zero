@@ -1,2 +1,3 @@
 # http-zero
-Experiments with http reimplementation from scratch
+
+Experiments with HTTP server in Go.

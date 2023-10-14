@@ -1,0 +1,70 @@
+<html>
+
+<body>
+    <h1>WS Controls</h1>
+    <section>
+        <p>WS connection established: <span style="font-weight: bold" id="connectionState">"false"</span></p>
+        <button onClick={handleConnect()}>connect to WS server</button>
+        <button onClick={handleClose()}>close WS connection</button>
+        <div>
+            <input id="msg" />
+            <button id="send-msg" onClick={handleSend()}>send</button>
+        </div>
+
+        <p style="color: red" id="errorOutput"></p>
+        <p style="color: green">Server output: <span id="serverOutput"></span></p>
+    </section>
+</body>
+
+<script>
+    let socket = null;
+    let connectionWSState = false;
+    const connectionStateIndicator = document.getElementById("connectionState");
+    const errorOutput = document.getElementById("errorOutput");
+    const serverOutput = document.getElementById("serverOutput");
+
+    connectionStateIndicator.innerText = `${connectionWSState}`;
+
+    function handleSend() {
+        const input = document.getElementById("msg").value;
+        console.log(input);
+        console.log('sending')
+        socket.send(input)
+    }
+
+    function handleClose() {
+        socket.close(1000, "client closed");
+    }
+
+    function handleConnect() {
+        // clear error state
+        errorOutput.innerText = "";
+        console.log('connect init');
+
+        // Create WebSocket connection.
+        socket = new WebSocket("ws://localhost:8080/ws");
+
+        // Connection opened
+        socket.addEventListener("open", (event) => {
+            connectionStateIndicator.innerText = `true`;
+            socket.send("Hello Server!");
+        });
+
+        // Listen for messages
+        socket.addEventListener("message", (event) => {
+            console.log("Message from server ", event.data);
+            serverOutput.innerText = event.data;
+        });
+
+        socket.addEventListener("error", (event) => {
+            console.log('err:', event)
+            errorOutput.innerText = "Encountered error with creation or maintaining WS connection"
+        })
+
+        socket.addEventListener("close", (event) => {
+            connectionStateIndicator.innerText = `false`;
+        });
+    }
+</script>
+
+</html>
