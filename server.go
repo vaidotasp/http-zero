@@ -1,13 +1,21 @@
 package main
 
 import (
+	"encoding/json"
 	"log"
+	"math/rand"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/gorilla/websocket"
 	"github.com/rs/cors"
 )
+
+type Data struct {
+	RandomNumber int       `json: "RandomNumber:random_number"`
+	ReqTime      time.Time `json: "ReqTime:req_time"`
+}
 
 var upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
@@ -19,6 +27,33 @@ func main() {
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.Write([]byte("{\"Server Response\": \"OK\"}"))
+	})
+
+	// Endpoint that returns a random number between 1 and 1000. It also has arbitrary delay between 0 and 1000ms.
+	mux.HandleFunc("/data", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+
+		randomInt := rand.Intn(1000)
+		currTime := time.Now()
+
+		responseData := Data{
+			RandomNumber: randomInt,
+			ReqTime:      currTime,
+		}
+
+		jsonData, err := json.Marshal(responseData)
+		if err != nil {
+			// Handle error
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		// Introduce a random delay
+		delay := time.Duration(randomInt) * time.Millisecond
+		time.Sleep(delay)
+
+		w.Write(jsonData)
+
 	})
 
 	mux.HandleFunc("/socket", func(w http.ResponseWriter, r *http.Request) {
